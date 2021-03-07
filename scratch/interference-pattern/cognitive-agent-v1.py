@@ -3,7 +3,7 @@
 
 import gym
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
+import tf_slim as slim
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ a_size = ac_space.n
 model = keras.Sequential()
 model.add(keras.layers.Dense(s_size, input_shape=(s_size,), activation='relu'))
 model.add(keras.layers.Dense(a_size, activation='softmax'))
-model.compile(optimizer=tf.train.AdamOptimizer(0.001),
+model.compile(optimizer=tf.optimizers.Adam(0.001),
               loss='categorical_crossentropy',
               metrics=['accuracy'])
 
