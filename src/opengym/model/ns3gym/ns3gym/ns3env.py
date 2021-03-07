@@ -38,7 +38,7 @@ class Ns3ZmqBridge(object):
 
         context = zmq.Context()
         self.socket = context.socket(zmq.REP)
-        slef.socket.setsockopt(zmq.RCVTIMEO, 10000)
+        self.socket.setsockopt(zmq.RCVTIMEO, 10000)
         try:
             if port == 0 and self.startSim:
                 port = self.socket.bind_to_random_port('tcp://*', min_port=5001, max_port=10000, max_tries=100)
