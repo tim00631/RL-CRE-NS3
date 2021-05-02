@@ -21,8 +21,9 @@ print("Action space: ", ac_space, ac_space.n)
 s_size = ob_space.shape[0]
 a_size = ac_space.n
 model = keras.Sequential()
-model.add(keras.layers.Dense(s_size, input_shape=(s_size,), activation='relu'))
-model.add(keras.layers.Dense(a_size, activation='softmax'))
+model.add(keras.layers.Dense(units=10, input_shape=(s_size,), activation='relu'))
+model.add(keras.layers.Dense(units=10,activation='relu'))
+model.add(keras.layers.Dense(units=a_size, activation='softmax'))
 model.compile(optimizer=tf.optimizers.Adam(0.001),
               loss='categorical_crossentropy',
               metrics=['accuracy'])
