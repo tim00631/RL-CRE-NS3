@@ -27,22 +27,21 @@
 #include "ns3/spectrum-module.h"
 #include "ns3/stats-module.h"
 #include "ns3/flow-monitor-module.h"
-
+#include <iostream>
 #include "mygym.h"
-
+#include <stdlib.h> // srand, rand
 using namespace ns3;
-
 NS_LOG_COMPONENT_DEFINE ("Interference-Pattern");
-
 
 int main (int argc, char *argv[])
 {
   // Parameters of the environment
-  uint32_t simSeed = 1;
+  uint32_t simSeed = 2;
   double simulationTime = 10; //seconds
   double envStepTime = 0.1; //seconds, ns3gym env step time interval
   uint32_t openGymPort = 5555;
   uint32_t testArg = 0;
+  bool enableMarkov = false;
 
   //Parameters of the scenario
   uint32_t nodeNum = 2;
@@ -53,13 +52,15 @@ int main (int argc, char *argv[])
   // Interference Pattern
   double interferenceSlotTime = 0.1;  // seconds;
 
-  //        time,    channel usage
+  // time
+  std::srand(simSeed);
+
+  // channel usage
   std::map<uint32_t, std::vector<uint32_t> > interferencePattern;
   interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (0, {1,0,0,0}));
   interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (1, {0,1,0,0}));
   interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (2, {0,0,1,0}));
   interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (3, {0,0,0,1}));
-
   // set channel number correctly, do not modify
   std::vector<uint32_t> tmp = interferencePattern.at(0);
   uint32_t channNum = tmp.size();
@@ -80,9 +81,38 @@ int main (int argc, char *argv[])
   NS_LOG_UNCOND("--envStepTime: " << envStepTime);
   NS_LOG_UNCOND("--seed: " << simSeed);
   NS_LOG_UNCOND("--testArg: " << testArg);
-
   RngSeedManager::SetSeed (1);
   RngSeedManager::SetRun (simSeed);
+
+  // initialize transition matrix
+  uint32_t num_of_channel = 4;
+  std::vector<std::vector<float>> transition_matrix;
+  for (uint32_t i = 0;i < num_of_channel; i++){
+    // float p00 = (float)rand() / RAND_MAX;
+    // float p01 = (float)rand() / RAND_MAX;
+    float p00 = 0.8;
+    float p01 = 0.2;
+    float p10 = (float)(1 - p00);
+    float p11 = (float)(1 - p01);
+    transition_matrix.push_back({p00, p01, p10, p11});
+  }
+
+  for (uint32_t i = 0;i < num_of_channel; i++) {
+    std::vector<float> prob = transition_matrix[i];
+    if (enableMarkov){
+      std::cout << "channel " << i << ":" << std::endl;  
+      std::cout << prob[0] << ',' << prob[1] << std::endl;
+      std::cout << prob[2] << ',' << prob[3] << std::endl;
+    }
+  }
+  
+  std::vector<std::vector<float>> states;
+  for (uint32_t i = 0;i < num_of_channel; i++) {
+    if (i == 0) 
+      states.push_back({0,1}); // initial state: (idle, busy)
+    else 
+      states.push_back({1,0}); // initial state: (busy, idle)
+  }
 
   // OpenGym Env
   Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface> (openGymPort);
@@ -178,12 +208,9 @@ int main (int argc, char *argv[])
   double scheduledTime = 0;
   while (scheduledTime < simulationTime)
   {
-    std::map<uint32_t, std::vector<uint32_t> >::iterator it;
-    for (it=interferencePattern.begin(); it!=interferencePattern.end(); it++) {
-      std::vector<uint32_t> channels = (*it).second;
-
-      for (uint32_t chanId = 0; chanId < channels.size(); chanId++){
-        uint32_t occupied = channels.at(chanId);
+    if (enableMarkov){
+      for (uint32_t chanId = 0; chanId < num_of_channel; chanId++) {
+        uint32_t occupied = ((float)rand() / RAND_MAX) < states[chanId][1];
         NS_LOG_DEBUG("scheduledTime: " << scheduledTime << " ChanId " << chanId << " Occupied: " << occupied);
         if (occupied == 1) {
           Simulator::Schedule (Seconds (scheduledTime), &WaveformGenerator::Start,
@@ -192,9 +219,29 @@ int main (int argc, char *argv[])
           Simulator::Schedule (Seconds (scheduledTime), &WaveformGenerator::Stop,
                                waveformGeneratorDevices.Get (chanId)->GetObject<NonCommunicatingNetDevice> ()->GetPhy ()->GetObject<WaveformGenerator> ());
         }
+        states[chanId][1] = transition_matrix[chanId][2]* states[chanId][0] + transition_matrix[chanId][3]* states[chanId][1];
+        states[chanId][0] = 1 - states[chanId][1];
       }
-      scheduledTime += interferenceSlotTime;
     }
+    else {
+      std::map<uint32_t, std::vector<uint32_t> >::iterator it;
+      for (it=interferencePattern.begin(); it!=interferencePattern.end(); it++) {
+        std::vector<uint32_t> channels = (*it).second;
+
+        for (uint32_t chanId = 0; chanId < channels.size(); chanId++){
+          uint32_t occupied = channels.at(chanId);
+          NS_LOG_DEBUG("scheduledTime: " << scheduledTime << " ChanId " << chanId << " Occupied: " << occupied);
+          if (occupied == 1) {
+            Simulator::Schedule (Seconds (scheduledTime), &WaveformGenerator::Start,
+                                waveformGeneratorDevices.Get (chanId)->GetObject<NonCommunicatingNetDevice> ()->GetPhy ()->GetObject<WaveformGenerator> ());
+          } else {
+            Simulator::Schedule (Seconds (scheduledTime), &WaveformGenerator::Stop,
+                                waveformGeneratorDevices.Get (chanId)->GetObject<NonCommunicatingNetDevice> ()->GetPhy ()->GetObject<WaveformGenerator> ());
+          }
+        }
+      }
+    }
+    scheduledTime += interferenceSlotTime;
   }
 
   NS_LOG_UNCOND ("Simulation start");
