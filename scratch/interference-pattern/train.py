@@ -53,7 +53,7 @@ def replay_experience(model, target_model, memory):
     targets_value = model.predict(states)
     next_q_values = target_model.predict(next_states).max(axis=1)
     targets_value[:memory.batch_size, actions] = rewards + gamma_r * next_q_values
-    model.train(states, targets_valueㄎㄢㄎㄢ)
+    model.train(states, targets_value)
 
 def update_state_history(state):
     global state_history

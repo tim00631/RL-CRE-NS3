@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
   double envStepTime = 0.1; //seconds, ns3gym env step time interval
   uint32_t openGymPort = 5555;
   uint32_t testArg = 0;
-  bool enableMarkov = false;
+  bool enableMarkov = true;
 
   //Parameters of the scenario
   uint32_t nodeNum = 2;
@@ -88,10 +88,10 @@ int main (int argc, char *argv[])
   uint32_t num_of_channel = 4;
   std::vector<std::vector<float>> transition_matrix;
   for (uint32_t i = 0;i < num_of_channel; i++){
-    // float p00 = (float)rand() / RAND_MAX;
-    // float p01 = (float)rand() / RAND_MAX;
-    float p00 = 0.8;
-    float p01 = 0.2;
+    float p00 = (float)rand() / RAND_MAX;
+    float p01 = (float)rand() / RAND_MAX;
+    // float p00 = 0.8;
+    // float p01 = 0.2;
     float p10 = (float)(1 - p00);
     float p11 = (float)(1 - p01);
     transition_matrix.push_back({p00, p01, p10, p11});

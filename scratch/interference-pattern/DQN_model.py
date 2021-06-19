@@ -62,6 +62,4 @@ class DRQN:
         else:
             return np.argmax(q_value)
     def train(self, states, targets):
-        # TODO
-        self.model.fit(states, targets)
-        pass
+        self.model.fit(states, targets,verbose=0)
