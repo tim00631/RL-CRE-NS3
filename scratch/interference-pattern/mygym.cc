@@ -79,7 +79,7 @@ Ptr<OpenGymSpace>
 MyGymEnv::GetActionSpace()
 {
   NS_LOG_FUNCTION (this);
-  Ptr<OpenGymDiscreteSpace> space = CreateObject<OpenGymDiscreteSpace> (m_channelNum);
+  Ptr<OpenGymDiscreteSpace> space = CreateObject<OpenGymDiscreteSpace> (m_channelNum + 1); // add idle action
   NS_LOG_UNCOND ("GetActionSpace: " << space);
   return space;
 }
@@ -136,6 +136,10 @@ MyGymEnv::GetReward()
   NS_LOG_FUNCTION (this);
   float reward = 1.0;
   if (m_channelOccupation.size() == 0){
+    return 0.0;
+  }
+  if (m_currentChannel == m_channelNum) {
+    NS_LOG_UNCOND ("MyGetReward: " << reward);
     return 0.0;
   }
   uint32_t occupied = m_channelOccupation.at(m_currentChannel);
