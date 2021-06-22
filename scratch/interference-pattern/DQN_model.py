@@ -50,13 +50,13 @@ class DRQN:
     def predict(self, state):
         return self.model.predict(state)
 
-    def get_action(self, state):
+    def get_action(self, state, is_training):
         state = np.reshape(state, [1, self.time_steps, self.state_dim])
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon, self.epsilon_min)
         q_value = self.predict(state)[0]
         # random select an action from action space
-        if np.random.random() < self.epsilon:
+        if np.random.random() < self.epsilon and is_training:
             return random.randint(0, self.action_dim - 1)
         # select an action based on max Q_value
         else:
