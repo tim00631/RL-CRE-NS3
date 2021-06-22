@@ -57,10 +57,14 @@ int main (int argc, char *argv[])
 
   // channel usage
   std::map<uint32_t, std::vector<uint32_t> > interferencePattern;
-  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (0, {1,0,0,0}));
-  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (1, {0,1,0,0}));
-  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (2, {0,0,1,0}));
-  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (3, {0,0,0,1}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (0, {1,0,0,0,0,0,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (1, {0,1,0,0,0,0,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (2, {0,0,1,0,0,0,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (3, {0,0,0,1,0,0,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (4, {0,0,0,0,1,0,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (5, {0,0,0,0,0,1,0,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (6, {0,0,0,0,0,0,1,0}));
+  interferencePattern.insert(std::pair<uint32_t, std::vector<uint32_t> > (7, {0,0,0,0,0,0,0,1}));
   // set channel number correctly, do not modify
   std::vector<uint32_t> tmp = interferencePattern.at(0);
   uint32_t channNum = tmp.size();
@@ -85,7 +89,7 @@ int main (int argc, char *argv[])
   RngSeedManager::SetRun (simSeed);
 
   // initialize transition matrix
-  uint32_t num_of_channel = 4;
+  uint32_t num_of_channel = 8;
   std::vector<std::vector<float>> transition_matrix;
   for (uint32_t i = 0;i < num_of_channel; i++){
     float p00 = (float)rand() / RAND_MAX;
@@ -99,11 +103,11 @@ int main (int argc, char *argv[])
 
   for (uint32_t i = 0;i < num_of_channel; i++) {
     std::vector<float> prob = transition_matrix[i];
-    if (enableMarkov){
-      std::cout << "channel " << i << ":" << std::endl;  
-      std::cout << prob[0] << ',' << prob[1] << std::endl;
-      std::cout << prob[2] << ',' << prob[3] << std::endl;
-    }
+    // if (enableMarkov){
+    //   std::cout << "channel " << i << ":" << std::endl;  
+    //   std::cout << prob[0] << ',' << prob[1] << std::endl;
+    //   std::cout << prob[2] << ',' << prob[3] << std::endl;
+    // }
   }
   
   std::vector<std::vector<float>> states;
@@ -111,7 +115,7 @@ int main (int argc, char *argv[])
     if (i == 0) 
       states.push_back({0,1}); // initial state: (idle, busy)
     else 
-      states.push_back({1,0}); // initial state: (busy, idle)
+      states.push_back({1,0});
   }
 
   // OpenGym Env
@@ -219,9 +223,11 @@ int main (int argc, char *argv[])
           Simulator::Schedule (Seconds (scheduledTime), &WaveformGenerator::Stop,
                                waveformGeneratorDevices.Get (chanId)->GetObject<NonCommunicatingNetDevice> ()->GetPhy ()->GetObject<WaveformGenerator> ());
         }
+        std::cout << occupied << " ";
         states[chanId][1] = transition_matrix[chanId][2]* states[chanId][0] + transition_matrix[chanId][3]* states[chanId][1];
         states[chanId][0] = 1 - states[chanId][1];
       }
+      std::cout << std::endl;
     }
     else {
       std::map<uint32_t, std::vector<uint32_t> >::iterator it;

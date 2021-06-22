@@ -22,26 +22,27 @@ print("Action space: ", ac_space, ac_space.n)
 state_size = ob_space.shape[0]
 action_size = ac_space.n
 
-hidden_size = 128           # Number of hidden neurons
+# hidden_size = 128           # Number of hidden neurons
 learning_rate = 0.001       # learning rate
 time_steps=1+2+2            # length of history sequence for each datapoint in batch
-epsilon = 1.0               # exploration rate
+total_episodes = 500
+max_env_steps = 100
+env._max_episode_steps = max_env_steps
+
+epsilon = 0.9              # exploration rate
 epsilon_min = 0.01
-epsilon_decay = 0.999
+epsilon_decay = 0.9999
 memory_size = 5000
 batch_size = 64
 gamma_r = 0.95
 replace_target_iter = 32
+
 # eval_model, target model
 model = DRQN(state_size,action_size,epsilon,epsilon_decay,epsilon_min, time_steps, learning_rate)
 target_model = DRQN(state_size,action_size,epsilon,epsilon_decay,epsilon_min, time_steps, learning_rate)
 
 # Replay Memory
 memory = Memory(memory_size, batch_size, time_steps)
-
-total_episodes = 200
-max_env_steps = 100
-env._max_episode_steps = max_env_steps
 
 
 state_history = np.zeros([time_steps, state_size])

@@ -103,14 +103,14 @@ MyGymEnv::GetGameOver()
   NS_LOG_FUNCTION (this);
   bool isGameOver = false;
 
-  uint32_t collisionNum = 0;
-  for (auto& v : m_collisions)
-    collisionNum += v;
+  // uint32_t collisionNum = 0;
+  // for (auto& v : m_collisions)
+  //   collisionNum += v;
 
-  if (collisionNum >= m_collisionTh){
-    isGameOver = true;
-  }
-  NS_LOG_UNCOND ("MyGetGameOver: " << isGameOver);
+  // if (collisionNum >= m_collisionTh){
+  //   isGameOver = true;
+  // }
+  // NS_LOG_UNCOND ("MyGetGameOver: " << isGameOver);
   return isGameOver;
 }
 
