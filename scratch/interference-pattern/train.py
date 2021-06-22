@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 from ns3gym import ns3env
 from DQN_model import Memory, DRQN
-
+from tensorflow import keras
 env = ns3env.Ns3Env(debug=False)
 
 # env = gym.make('ns3-v0')
@@ -37,10 +37,14 @@ batch_size = 64
 gamma_r = 0.95
 replace_target_iter = 32
 
-# eval_model, target model
-model = DRQN(state_size,action_size,epsilon,epsilon_decay,epsilon_min, time_steps, learning_rate)
-target_model = DRQN(state_size,action_size,epsilon,epsilon_decay,epsilon_min, time_steps, learning_rate)
-
+is_training = True
+if is_training :
+    # eval_model, target model
+    model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
+    target_model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
+else:
+    model = keras.models.load_model('model/drqn_model')
+    target_model = keras.models.load_model('model/drqn_target')
 # Replay Memory
 memory = Memory(memory_size, batch_size, time_steps)
 
@@ -74,7 +78,7 @@ for e in range(total_episodes):
     update_state_history(state)
 
     for time in range(max_env_steps):
-        action = model.get_action(state_history)
+        action = model.get_action(state_history,is_training)
         # Step
         next_state, reward, done, _ = env.step(action)
 
@@ -89,14 +93,19 @@ for e in range(total_episodes):
         memory.store(prev_state_history, action, reward, state_history)
         reward_sum += reward
         
-        if memory.size() > batch_size:
-            replay_experience(model, target_model, memory)
-        if time % replace_target_iter == 0:  
-            update_target_weight()
+        if is_training:
+            if memory.size() > batch_size:
+                replay_experience(model, target_model, memory)
+            if time % replace_target_iter == 0:  
+                update_target_weight()
     
     time_history.append(time)
     reward_history.append(reward_sum)
 
+if is_training:
+    model.model.save('model/drqn_model')
+    target_model.model.save('model/drqn_target')
+    
 env.close()
 #for n in range(2 ** s_size):
 #    state = [n >> i & 1 for i in range(0, 2)]
