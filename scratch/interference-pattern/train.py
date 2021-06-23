@@ -37,14 +37,16 @@ batch_size = 64
 gamma_r = 0.95
 replace_target_iter = 32
 
-is_training = True
+is_training = False
 if is_training :
     # eval_model, target model
     model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
     target_model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
 else:
-    model = keras.models.load_model('model/drqn_model')
-    target_model = keras.models.load_model('model/drqn_target')
+    model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
+    target_model = DRQN(state_size, action_size, epsilon, epsilon_decay, epsilon_min, time_steps, learning_rate)
+    model.model = keras.models.load_model('model/drqn_model')
+    target_model.model = keras.models.load_model('model/drqn_target')
 # Replay Memory
 memory = Memory(memory_size, batch_size, time_steps)
 
